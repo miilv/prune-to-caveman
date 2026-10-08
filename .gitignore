@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+corpus_pipeline/data/
+.ipynb_checkpoints/
+ckpt_original/
+qwen2.5-0.5b-caveman-*/
+*.zip

@@ -1,0 +1,14 @@
+[
+ {"title": "Paris", "subject": ["Paris"],
+  "src": "Paris is the capital and most populous city of France. It is located on the Seine River, in the north of the country. The city has been a major centre of finance, art and science since the 17th century.",
+  "cave": "Paris be head town of France. most people of France live here. Paris be near big river, in north part of land. from year 1600, Paris be strong place for money, art and knowledge."},
+ {"title": "Photosynthesis", "subject": [],
+  "src": "Photosynthesis is a process used by plants to convert light energy into chemical energy. This energy is stored in sugars made from carbon dioxide and water.",
+  "cave": "plant take light from sun. plant change light to food power. plant make sweet food from air and water. plant keep power in sweet food."},
+ {"title": "Battle of Hastings", "subject": ["Hastings"],
+  "src": "The Battle of Hastings was fought on 14 October 1066 between the Norman-French army of William, the Duke of Normandy, and an English army under King Harold. The Normans won, and Harold was killed.",
+  "cave": "on day 14 of month 10, year 1066, two army fight near Hastings. one army come from France, over sea. chief of this army want become king of England. other army have king of England. army from over sea win. king of England die."},
+ {"title": "Marie Curie", "subject": ["Marie", "Curie"],
+  "src": "Marie Curie was a Polish-born physicist and chemist who conducted pioneering research on radioactivity. She was the first woman to win a Nobel Prize.",
+  "cave": "Marie Curie come from Poland, cold land in east. she learn about stone, power and fire. she find light that come out of some rock. this light can make body sick. Curie first woman to win big gold thing for wise people."}
+]

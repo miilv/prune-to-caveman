@@ -1,0 +1,344 @@
+{
+ "part1": [
+  {
+   "tokenizer": "Qwen2.5 (151k)",
+   "vocab": 151643,
+   "tokens": 2373164,
+   "bytes/token": 3.8650855988039594,
+   "fertility": 1.288944143639177,
+   "distinct ids": 4973,
+   "share of vocab": 0.0327941283145282,
+   "ids for 99% of occurrences": 1918
+  },
+  {
+   "tokenizer": "GPT-2 r50k (50k)",
+   "vocab": 50257,
+   "tokens": 2264885,
+   "bytes/token": 4.049866549515759,
+   "fertility": 1.2301342245062783,
+   "distinct ids": 5995,
+   "share of vocab": 0.11928686551127206,
+   "ids for 99% of occurrences": 2474
+  },
+  {
+   "tokenizer": "GPT-4 cl100k (100k)",
+   "vocab": 100277,
+   "tokens": 2269439,
+   "bytes/token": 4.041739830856877,
+   "fertility": 1.232607653072586,
+   "distinct ids": 5961,
+   "share of vocab": 0.0594453364181218,
+   "ids for 99% of occurrences": 2329
+  },
+  {
+   "tokenizer": "GPT-4o o200k (200k)",
+   "vocab": 200019,
+   "tokens": 2264949,
+   "bytes/token": 4.04975211362375,
+   "fertility": 1.230168985030706,
+   "distinct ids": 6287,
+   "share of vocab": 0.03143201395867393,
+   "ids for 99% of occurrences": 2419
+  }
+ ],
+ "held_distinct": {
+  "caveman": 2018,
+  "english": 21867
+ },
+ "part2": {
+  "vocab": [
+   151643,
+   6244
+  ],
+  "merges": [
+   151387,
+   5988
+  ],
+  "roundtrip": [
+   true,
+   true
+  ],
+  "train": {
+   "identical_fraction": 1.0,
+   "length_ratio": 1.0
+  },
+  "held": {
+   "identical_fraction": 0.4065934065934066,
+   "length_ratio": 1.0105917303865712
+  },
+  "held_paragraphs": {
+   "identical_fraction": 0.7809187279151943,
+   "length_ratio": 1.0093200433495197
+  },
+  "english": {
+   "identical_fraction": 0.0,
+   "length_ratio": 1.5225052700247899
+  }
+ },
+ "closure": {
+  "added": 1083,
+  "example": "\u2423this"
+ },
+ "no_closure": {
+  "identical_fraction": 0.0,
+  "length_ratio": 1.923645269110136,
+  "unreachable": 1794
+ },
+ "part3": {
+  "params": [
+   494032768,
+   363517824
+  ],
+  "ckpt_mb": [
+   999.521356,
+   727.47523
+  ],
+  "bpb": [
+   {
+    "bits_per_byte": 1.284606330028356,
+    "nll_per_token": 3.415816316952276,
+    "tokens": 206666,
+    "bytes": 792808,
+    "tokens_per_byte": 0.26067597703353146
+   },
+   {
+    "bits_per_byte": 1.2278792169341022,
+    "nll_per_token": 3.238307683101532,
+    "tokens": 208368,
+    "bytes": 792808,
+    "tokens_per_byte": 0.2628227767631003
+   },
+   {
+    "bits_per_byte": 1.2278778841253932,
+    "nll_per_token": 3.2383041680614344,
+    "tokens": 208368,
+    "bytes": 792808,
+    "tokens_per_byte": 0.2628227767631003
+   }
+  ],
+  "bpb_en": [
+   {
+    "bits_per_byte": 0.969725880794336,
+    "nll_per_token": 2.820937291015342,
+    "tokens": 55181,
+    "bytes": 231584,
+    "tokens_per_byte": 0.23827639215144397
+   },
+   {
+    "bits_per_byte": 2.102043631004959,
+    "nll_per_token": 4.079699911888814,
+    "tokens": 82708,
+    "bytes": 231584,
+    "tokens_per_byte": 0.3571403896642255
+   }
+  ],
+  "gen": [
+   [
+    "mammoth be big animal with long hair. people call it a mammoth. it is a big animal with long hair. people call it a mammoth. it is a big animal with long hair",
+    "long ago, people of Rome make a pact with the gods. They promise to do nothing but worship the gods and to do nothing but obey the gods. They promise to do nothing but",
+    "the sun beaming down on the city of birmingham, alabama, in 1963, the first black student to graduate from the city's public"
+   ],
+   [
+    "mammoth be big animal with long hair. people call it a mammoth. it is a big animal with long hair. people call it a mammoth. it is a big animal with long hair",
+    "long ago, people of Rome make a great journey to the island of Sicily. The journey is long and arduous, but the people of Rome have a great spirit and they",
+    "the sun be a little bit more bright\n\nHow do you say this in English?\n\nThe sun be a little bit more bright\nIn English, you can say:"
+   ],
+   [
+    "mammoth be big animal with long hair. people call it a mammoth. it is a big animal with long hair. people call it a mammoth. it is a big animal with long hair",
+    "long ago, people of Rome make a great journey to the island of Sicily. The journey is long and arduous, but the people of Rome have a great spirit and they",
+    "the sun be a little bit more bright\n\nHow do you say this in English?\n\nThe sun be a little bit more bright\nIn English, you can say:"
+   ]
+  ]
+ },
+ "part4": [
+  {
+   "run": "original",
+   "vocab": 151643,
+   "merges": 151387,
+   "params (M)": 494.032768,
+   "held identical": 1.0,
+   "length ratio": 1.0,
+   "tokens/byte": 0.26067597703353146,
+   "bits/byte": 1.284606330028356,
+   "English length ratio": 1.0,
+   "English bits/byte": 0.969725880794336
+  },
+  {
+   "run": "m=1",
+   "vocab": 6244,
+   "merges": 5988,
+   "params (M)": 363.517824,
+   "held identical": 0.4065934065934066,
+   "length ratio": 1.0105917303865712,
+   "tokens/byte": 0.2628227767631003,
+   "bits/byte": 1.2278778841253932,
+   "English length ratio": 1.5074353136049023,
+   "English bits/byte": 2.1019682420998285,
+   "m": 1
+  },
+  {
+   "run": "m=5",
+   "vocab": 5012,
+   "merges": 4756,
+   "params (M)": 362.428288,
+   "held identical": 0.29120879120879123,
+   "length ratio": 1.013427252071931,
+   "tokens/byte": 0.26318982654059997,
+   "bits/byte": 1.2286725331109036,
+   "English length ratio": 1.5391482868429593,
+   "English bits/byte": 2.156189899179732,
+   "m": 5
+  },
+  {
+   "run": "m=20",
+   "vocab": 3296,
+   "merges": 3040,
+   "params (M)": 360.88,
+   "held identical": 0.06593406593406594,
+   "length ratio": 1.020658833985251,
+   "tokens/byte": 0.264951917740487,
+   "bits/byte": 1.235789418850757,
+   "English length ratio": 1.6220283492139993,
+   "English bits/byte": 2.335233097891707,
+   "m": 20
+  },
+  {
+   "run": "m=100",
+   "vocab": 2045,
+   "merges": 1789,
+   "params (M)": 359.790464,
+   "held identical": 0.01098901098901099,
+   "length ratio": 1.0423131421634853,
+   "tokens/byte": 0.27060524111764767,
+   "bits/byte": 1.2741770748014418,
+   "English length ratio": 1.737259709997032,
+   "English bits/byte": 2.610863938888611,
+   "m": 100
+  },
+  {
+   "run": "m=500",
+   "vocab": 1178,
+   "merges": 922,
+   "params (M)": 358.987648,
+   "held identical": 0.0,
+   "length ratio": 1.1487663137378923,
+   "tokens/byte": 0.2991682727722223,
+   "bits/byte": 1.494859673902008,
+   "English length ratio": 1.9667500170895131,
+   "English bits/byte": 3.190258093193867,
+   "m": 500
+  },
+  {
+   "run": "random, size of m=1",
+   "vocab": 6244,
+   "merges": 5988,
+   "params (M)": 363.517824,
+   "held identical": 0.0,
+   "length ratio": 1.7211161189467117,
+   "tokens/byte": 0.44856510025125884,
+   "bits/byte": 2.6450448863312306,
+   "English length ratio": 1.911392634143188,
+   "English bits/byte": 2.843878779957665,
+   "m": 1
+  },
+  {
+   "run": "random, size of m=20",
+   "vocab": 3296,
+   "merges": 3040,
+   "params (M)": 360.88,
+   "held identical": 0.0,
+   "length ratio": 1.9163558675612082,
+   "tokens/byte": 0.4997792655977235,
+   "bits/byte": 3.0777176056491724,
+   "English length ratio": 2.141282163771286,
+   "English bits/byte": 3.380756511933455,
+   "m": 20
+  }
+ ],
+ "B3": {
+  "random": {
+   "bits/byte": 4.719062446259447,
+   "gen": "mammoth be big animal with long hair. peopleoevabalbalbalbalbalbalbalbalbalbalbalbalbalbalbalbalbalbalbal"
+  },
+  "mean of Qwen pieces": {
+   "bits/byte": 1.2323827313575062,
+   "gen": "mammoth be big animal with long hair. people call it a lion. it can run very fast. it can jump very high. it can swim"
+  }
+ },
+ "B1": [
+  {
+   "new tokens": 0,
+   "examples": "",
+   "fertility (train)": 1.288944143639177,
+   "tokens/byte (held)": 0.2628227767631003,
+   "bits/byte (held)": 1.2278778841253932,
+   "bits/byte after emb. fine-tune": 1.197881865476121
+  },
+  {
+   "new tokens": 100,
+   "examples": "\u2423Gowa, atchez, ruze, inteler, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
+   "fertility (train)": 1.2865331753902005,
+   "tokens/byte (held)": 0.2627836752404113,
+   "bits/byte (held)": 1.228724796983076,
+   "bits/byte after emb. fine-tune": 1.1970376857648308
+  },
+  {
+   "new tokens": 500,
+   "examples": "\u2423Gowa, atchez, ruze, inteler, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
+   "fertility (train)": 1.2840961367479031,
+   "tokens/byte (held)": 0.2627143015711244,
+   "bits/byte (held)": 1.2298924369284732,
+   "bits/byte after emb. fine-tune": 1.1830929347421921
+  }
+ ],
+ "B4": [
+  {
+   "model": "original",
+   "batch": 1,
+   "tokens/s": 166.39730228983026,
+   "ms/step": 6.009712815284729,
+   "peak MiB": 1002.09423828125
+  },
+  {
+   "model": "original",
+   "batch": 8,
+   "tokens/s": 1059.1956256737164,
+   "ms/step": 7.552901282906532,
+   "peak MiB": 1036.52587890625
+  },
+  {
+   "model": "pruned m=1",
+   "batch": 1,
+   "tokens/s": 170.25322837462306,
+   "ms/step": 5.873603746294975,
+   "peak MiB": 746.978515625
+  },
+  {
+   "model": "pruned m=1",
+   "batch": 8,
+   "tokens/s": 1104.1887238720478,
+   "ms/step": 7.2451382875442505,
+   "peak MiB": 762.36865234375
+  }
+ ],
+ "times": {
+  "corpus": 0.3,
+  "part1": 2.2,
+  "part2": 2.6,
+  "part3": 12.2,
+  "part4": 27.1,
+  "ship": 0.4,
+  "B3": 5.1,
+  "B1": 39.6,
+  "B4": 8.4
+ },
+ "env": {
+  "device": "NVIDIA GeForce RTX 4090",
+  "torch": "2.14.1+cu130",
+  "transformers": "5.19.0",
+  "tokenizers": "0.23.2",
+  "tiktoken": "0.14.0",
+  "seed": 0,
+  "dtype": "torch.bfloat16"
+ }
+}

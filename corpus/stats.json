@@ -1,0 +1,14 @@
+{
+ "train_docs": 2003,
+ "train_bytes": 9172482,
+ "held_docs": 182,
+ "held_bytes": 792808,
+ "held_source_bytes": 1162851,
+ "raw_offlist_rate": 0.01044867630445389,
+ "replacement_entries_valid": 1719,
+ "sentences_kept": 175544,
+ "sentences_dropped": 745,
+ "train_word_types": 3074,
+ "train_lowercase_types": 957,
+ "train_name_types": 2117
+}

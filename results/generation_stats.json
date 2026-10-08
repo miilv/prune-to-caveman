@@ -1,0 +1,14 @@
+{
+ "chunks": 3482,
+ "chunks_done": 3476,
+ "accepted": 0.9827387802071347,
+ "repaired": 0.510644418872267,
+ "first_pass_offlist": 0.040258688742911955,
+ "final_offlist": 0.010000054850253562,
+ "len_ratio": 0.6803747500056057,
+ "train_words": 1841169,
+ "in_tokens_m": 24.496829,
+ "out_tokens_m": 47.167428,
+ "think_share": 0.8957678591251573,
+ "cached_share": 0.7682376768029854
+}
