@@ -10,7 +10,8 @@
 #show raw: set text(size: 8.4pt)
 
 #align(center)[#text(size: 13pt, weight: "bold")[Homework 1 — Tokenizer pruning for caveman English] \
-Ilia Mikhalchuk · Modern Methods and Algorithms of Generative AI · Skoltech, Fall 2026 · #link("https://github.com/miilv/prune-to-caveman")[github.com/miilv/prune-to-caveman]]
+Ilia Mikhalchuk · Modern Methods and Algorithms of Generative AI · Skoltech, Fall 2026 \
+Code: #link("https://github.com/miilv/prune-to-caveman")[github.com/miilv/prune-to-caveman] · Pruned model: #link("https://huggingface.co/miilg/qwen2.5-0.5b-caveman")[huggingface.co/miilg/qwen2.5-0.5b-caveman]]
 
 = Language, corpus and setup
 *Language.* _Caveman English_, a closed-vocabulary register of English: lowercase base forms from a list of 961 words

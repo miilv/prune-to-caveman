@@ -11,7 +11,7 @@ The model's 151,643-token vocabulary is cut to **6,244 tokens** (−26.4% parame
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/miilv/prune-to-caveman/blob/main/hw1_mikhalchuk.ipynb)
 · **Report:** [`report/hw1_mikhalchuk_report.pdf`](report/hw1_mikhalchuk_report.pdf)
-· **Pruned model:** [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0) (`tokenizer.json`, `config.json`, `model.safetensors`)
+· **Pruned model:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0))
 
 ## The language
 

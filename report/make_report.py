@@ -48,7 +48,8 @@ typ = f'''#set page(paper: "a4", margin: (x: 1.4cm, y: 1.25cm), numbering: "1")
 #show raw: set text(size: 8.4pt)
 
 #align(center)[#text(size: 13pt, weight: "bold")[Homework 1 — Tokenizer pruning for caveman English] \\
-Ilia Mikhalchuk · Modern Methods and Algorithms of Generative AI · Skoltech, Fall 2026 · #link("https://github.com/miilv/prune-to-caveman")[github.com/miilv/prune-to-caveman]]
+Ilia Mikhalchuk · Modern Methods and Algorithms of Generative AI · Skoltech, Fall 2026 \\
+Code: #link("https://github.com/miilv/prune-to-caveman")[github.com/miilv/prune-to-caveman] · Pruned model: #link("https://huggingface.co/miilg/qwen2.5-0.5b-caveman")[huggingface.co/miilg/qwen2.5-0.5b-caveman]]
 
 = Language, corpus and setup
 *Language.* _Caveman English_, a closed-vocabulary register of English: lowercase base forms from a list of 961 words
@@ -211,7 +212,7 @@ The model's 151,643-token vocabulary is cut to **{k(m1["vocab"])} tokens** (−{
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/miilv/prune-to-caveman/blob/main/hw1_mikhalchuk.ipynb)
 · **Report:** [`report/hw1_mikhalchuk_report.pdf`](report/hw1_mikhalchuk_report.pdf)
-· **Pruned model:** [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0) (`tokenizer.json`, `config.json`, `model.safetensors`)
+· **Pruned model:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0))
 
 ## The language
 
