@@ -11,7 +11,8 @@ The model's 151,643-token vocabulary is cut to **6,244 tokens** (−26.4% parame
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/miilv/prune-to-caveman/blob/main/hw1_mikhalchuk.ipynb)
 · **Report:** [`report/hw1_mikhalchuk_report.pdf`](report/hw1_mikhalchuk_report.pdf)
-· **Pruned model:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0))
+· **Pruned models:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0)),
+[🤗 `miilg/gemma-3-270m-caveman`](https://huggingface.co/miilg/gemma-3-270m-caveman) (bonus B2; Gemma Terms of Use apply)
 
 ## The language
 
@@ -61,7 +62,7 @@ Qwen2.5 uses **4,973 of 151,643 ids (3.28%)** on the train corpus; 1,918 ids cov
   2.645 bits/byte — the gain comes from the skewed usage distribution.
 * **What to ship:** m = 1. After the first cut the embedding is 1.6% of the model; larger thresholds save at most 1.3% more and lose robustness.
 * **B2 — Gemma-3-270M** (byte-fallback tokenizer, embedding = 63% of the model): 12,162 tokens kept, parameters
-  268 → 108 M (**−59.7%**), bits/byte 1.5285 → 1.4919. Needs only the 256 byte tokens as base alphabet,
+  268 → 108 M (**−59.7%**), bits/byte 1.5285 → 1.4919 — [🤗 model](https://huggingface.co/miilg/gemma-3-270m-caveman). Needs only the 256 byte tokens as base alphabet,
   a closure over *all* merges producing a token (Gemma has duplicate merge results) and no `<unusedN>` placeholders.
 * **Other bonuses:** B1 vocabulary extension (little to gain: every list word is already one token), B3 tokenizer trained from
   scratch (random embeddings → 4.719 bits/byte; mean-of-pieces init → 1.232), B4 serving (peak memory 1002 → 747 MiB).
@@ -90,5 +91,5 @@ the notebook never calls an LLM API.
 
 ## Licence and AI assistance
 
-Code: MIT. Corpus: CC BY-SA 4.0 (derived from English Wikipedia). Pruned model: derived from Qwen2.5-0.5B (Apache-2.0).
+Code: MIT. Corpus: CC BY-SA 4.0 (derived from English Wikipedia). Pruned models: derived from Qwen2.5-0.5B (Apache-2.0) and Gemma-3-270M (Gemma Terms of Use).
 The notebook, pipeline and report were written with an AI coding assistant (Claude Code, Claude Opus 5.5) under the author's direction.

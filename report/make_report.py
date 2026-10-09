@@ -160,7 +160,7 @@ byte-level alphabet: 25,805 entries are produced by no merge (single characters 
 merge's result. With byte fallback only the 256 `<0xNN>` tokens are needed as base alphabet, the closure must follow *all* merges
 that build a kept token (following only the first one leaves {pct(gv["same, closure via first producer only"]["train identical"])} of the train articles identical), and the
 6,242 `<unusedN>` placeholders can go: {k(gv["starter rule: every merge-less entry + all added"]["vocab"])} → *{k(gv["256 byte tokens, no <unused> (shipped)"]["vocab"])}* tokens, all checks pass. Parameters
-{B2["params"][0] / 1e6:.0f} → *{B2["params"][1] / 1e6:.0f} M (−{pct(1 - B2["params"][1] / B2["params"][0])})*, bits/byte {f4(g0["bits_per_byte"])} → {f4(g1["bits_per_byte"])} (English probe {f3(ge0["bits_per_byte"])} → {f3(ge1["bits_per_byte"])}); appendix.
+{B2["params"][0] / 1e6:.0f} → *{B2["params"][1] / 1e6:.0f} M (−{pct(1 - B2["params"][1] / B2["params"][0])})*, bits/byte {f4(g0["bits_per_byte"])} → {f4(g1["bits_per_byte"])} (English probe {f3(ge0["bits_per_byte"])} → {f3(ge1["bits_per_byte"])}); appendix, model: `miilg/gemma-3-270m-caveman`.
 *B3 — tokenizer trained from scratch.* A BPE trained on the caveman corpus (Qwen's pre-tokenizer, same vocabulary size) tokenizes as well, but
 with random embeddings Qwen gets {f3(b3["random"]["bits/byte"])} bits/byte — worse than uniform — and repeats one token; mean-of-pieces (FVT) init gives {f3(b3["mean of Qwen pieces"]["bits/byte"])}.
 *B1 — vocabulary extension.* New merges trained with `tokenizers`, appended to the pruned vocabulary, mean-initialised: fertility
@@ -232,7 +232,8 @@ The model's 151,643-token vocabulary is cut to **{k(m1["vocab"])} tokens** (−{
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/miilv/prune-to-caveman/blob/main/hw1_mikhalchuk.ipynb)
 · **Report:** [`report/hw1_mikhalchuk_report.pdf`](report/hw1_mikhalchuk_report.pdf)
-· **Pruned model:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0))
+· **Pruned models:** [🤗 `miilg/qwen2.5-0.5b-caveman`](https://huggingface.co/miilg/qwen2.5-0.5b-caveman) (also as a zip in [GitHub release `v1.0`](https://github.com/miilv/prune-to-caveman/releases/tag/v1.0)),
+[🤗 `miilg/gemma-3-270m-caveman`](https://huggingface.co/miilg/gemma-3-270m-caveman) (bonus B2; Gemma Terms of Use apply)
 
 ## The language
 
@@ -275,7 +276,7 @@ Qwen2.5 uses **{k(q["distinct ids"])} of 151,643 ids ({pct(q["share of vocab"], 
   {f3(sw["random, size of m=1"]["bits/byte"])} bits/byte — the gain comes from the skewed usage distribution.
 * **What to ship:** m = 1. After the first cut the embedding is 1.6% of the model; larger thresholds save at most 1.3% more and lose robustness.
 * **B2 — Gemma-3-270M** (byte-fallback tokenizer, embedding = 63% of the model): {k(gv["256 byte tokens, no <unused> (shipped)"]["vocab"])} tokens kept, parameters
-  {B2["params"][0] / 1e6:.0f} → {B2["params"][1] / 1e6:.0f} M (**−{pct(1 - B2["params"][1] / B2["params"][0])}**), bits/byte {f4(g0["bits_per_byte"])} → {f4(g1["bits_per_byte"])}. Needs only the 256 byte tokens as base alphabet,
+  {B2["params"][0] / 1e6:.0f} → {B2["params"][1] / 1e6:.0f} M (**−{pct(1 - B2["params"][1] / B2["params"][0])}**), bits/byte {f4(g0["bits_per_byte"])} → {f4(g1["bits_per_byte"])} — [🤗 model](https://huggingface.co/miilg/gemma-3-270m-caveman). Needs only the 256 byte tokens as base alphabet,
   a closure over *all* merges producing a token (Gemma has duplicate merge results) and no `<unusedN>` placeholders.
 * **Other bonuses:** B1 vocabulary extension (little to gain: every list word is already one token), B3 tokenizer trained from
   scratch (random embeddings → {f3(b3["random"]["bits/byte"])} bits/byte; mean-of-pieces init → {f3(b3["mean of Qwen pieces"]["bits/byte"])}), B4 serving (peak memory {b4o["peak MiB"]:.0f} → {b4p["peak MiB"]:.0f} MiB).
@@ -304,7 +305,7 @@ the notebook never calls an LLM API.
 
 ## Licence and AI assistance
 
-Code: MIT. Corpus: CC BY-SA 4.0 (derived from English Wikipedia). Pruned model: derived from Qwen2.5-0.5B (Apache-2.0).
+Code: MIT. Corpus: CC BY-SA 4.0 (derived from English Wikipedia). Pruned models: derived from Qwen2.5-0.5B (Apache-2.0) and Gemma-3-270M (Gemma Terms of Use).
 The notebook, pipeline and report were written with an AI coding assistant (Claude Code, Claude Opus 5.5) under the author's direction.
 '''
 (HERE.parent / "README.md").write_text(readme)

@@ -21,4 +21,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 The code is MIT-licensed. The texts in corpus/ are derived from English Wikipedia and are licensed
-CC BY-SA 4.0 (see corpus/README.md). The pruned model is derived from Qwen/Qwen2.5-0.5B (Apache-2.0).
+CC BY-SA 4.0 (see corpus/README.md). The pruned models are derived from Qwen/Qwen2.5-0.5B (Apache-2.0)
+and google/gemma-3-270m (Gemma Terms of Use, ai.google.dev/gemma/terms); this repository contains no Gemma weights.

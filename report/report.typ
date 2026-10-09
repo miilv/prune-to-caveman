@@ -127,7 +127,7 @@ byte-level alphabet: 25,805 entries are produced by no merge (single characters 
 merge's result. With byte fallback only the 256 `<0xNN>` tokens are needed as base alphabet, the closure must follow *all* merges
 that build a kept token (following only the first one leaves 25.6% of the train articles identical), and the
 6,242 `<unusedN>` placeholders can go: 37,562 → *12,162* tokens, all checks pass. Parameters
-268 → *108 M (−59.7%)*, bits/byte 1.5285 → 1.4919 (English probe 1.166 → 2.773); appendix.
+268 → *108 M (−59.7%)*, bits/byte 1.5285 → 1.4919 (English probe 1.166 → 2.773); appendix, model: `miilg/gemma-3-270m-caveman`.
 *B3 — tokenizer trained from scratch.* A BPE trained on the caveman corpus (Qwen's pre-tokenizer, same vocabulary size) tokenizes as well, but
 with random embeddings Qwen gets 4.719 bits/byte — worse than uniform — and repeats one token; mean-of-pieces (FVT) init gives 1.232.
 *B1 — vocabulary extension.* New merges trained with `tokenizers`, appended to the pruned vocabulary, mean-initialised: fertility
