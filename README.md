@@ -60,13 +60,16 @@ Qwen2.5 uses **4,973 of 151,643 ids (3.28%)** on the train corpus; 1,918 ids cov
 * **Random control:** the same number of random tokens (with merge closure) makes caveman text 1.72× longer and
   2.645 bits/byte — the gain comes from the skewed usage distribution.
 * **What to ship:** m = 1. After the first cut the embedding is 1.6% of the model; larger thresholds save at most 1.3% more and lose robustness.
-* **Bonuses:** B1 vocabulary extension (little to gain: every list word is already one token), B3 tokenizer trained from
+* **B2 — Gemma-3-270M** (byte-fallback tokenizer, embedding = 63% of the model): 12,162 tokens kept, parameters
+  268 → 108 M (**−59.7%**), bits/byte 1.5285 → 1.4919. Needs only the 256 byte tokens as base alphabet,
+  a closure over *all* merges producing a token (Gemma has duplicate merge results) and no `<unusedN>` placeholders.
+* **Other bonuses:** B1 vocabulary extension (little to gain: every list word is already one token), B3 tokenizer trained from
   scratch (random embeddings → 4.719 bits/byte; mean-of-pieces init → 1.232), B4 serving (peak memory 1002 → 747 MiB).
 
 ## Repository
 
 ```
-hw1_mikhalchuk.ipynb        the homework notebook, executed (Parts 1–4, bonuses B1, B3, B4)
+hw1_mikhalchuk.ipynb        the homework notebook, executed (Parts 1–4, bonuses B1–B4)
 report/                     2-page report (PDF) + its Typst source and generator
 corpus/                     frozen caveman corpus: train / held-out / English originals of held-out + metadata
 corpus_pipeline/            how the corpus was built (Wikipedia → topic filter → split → Haiku rewrite → checks)
@@ -78,8 +81,8 @@ tools/                      the notebook's source as a `# %%` script and the scr
 ## Reproduce
 
 Open the notebook in Colab with a GPU runtime (or any machine with a CUDA GPU) and *Run all*. It downloads the frozen
-corpus from this repository and the model from the Hugging Face Hub, needs no API keys, and takes
-1.6 min on an RTX 4090 (bf16; on a T4 it uses fp16, which gives the same bits per byte to 4 decimals).
+corpus from this repository and the model from the Hugging Face Hub, needs no API keys (B2 needs a Hugging Face login with the Gemma licence accepted, otherwise it is skipped), and takes
+2.2 min on an RTX 4090 (bf16; on a T4 it uses fp16, which gives the same bits per byte to 4 decimals).
 Library versions, seed and per-part timings are printed by the notebook and listed in the report.
 
 The corpus itself was built once with `corpus_pipeline/` (≈47 M output tokens of `claude-haiku-5-5`);

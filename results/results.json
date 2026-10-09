@@ -272,55 +272,196 @@
    "fertility (train)": 1.288944143639177,
    "tokens/byte (held)": 0.2628227767631003,
    "bits/byte (held)": 1.2278778841253932,
-   "bits/byte after emb. fine-tune": 1.197881865476121
+   "bits/byte after emb. fine-tune": 1.1929444667285372
   },
   {
    "new tokens": 100,
-   "examples": "\u2423Gowa, atchez, ruze, inteler, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
+   "examples": "\u2423Gowa, atchez, inteler, ruze, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
    "fertility (train)": 1.2865331753902005,
    "tokens/byte (held)": 0.2627836752404113,
-   "bits/byte (held)": 1.228724796983076,
-   "bits/byte after emb. fine-tune": 1.1970376857648308
+   "bits/byte (held)": 1.2287249284868687,
+   "bits/byte after emb. fine-tune": 1.194476656511998
   },
   {
    "new tokens": 500,
-   "examples": "\u2423Gowa, atchez, ruze, inteler, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
+   "examples": "\u2423Gowa, atchez, inteler, ruze, \u2423Cus, \u2423Neculu, \u2423Wint, \u2423Assam",
    "fertility (train)": 1.2840961367479031,
-   "tokens/byte (held)": 0.2627143015711244,
-   "bits/byte (held)": 1.2298924369284732,
-   "bits/byte after emb. fine-tune": 1.1830929347421921
+   "tokens/byte (held)": 0.26271304023168285,
+   "bits/byte (held)": 1.229934208930489,
+   "bits/byte after emb. fine-tune": 1.1836643933583852
   }
  ],
  "B4": [
   {
    "model": "original",
    "batch": 1,
-   "tokens/s": 166.39730228983026,
-   "ms/step": 6.009712815284729,
+   "tokens/s": 167.7879687726828,
+   "ms/step": 5.959902890026569,
    "peak MiB": 1002.09423828125
   },
   {
    "model": "original",
    "batch": 8,
-   "tokens/s": 1059.1956256737164,
-   "ms/step": 7.552901282906532,
+   "tokens/s": 1088.5519819210288,
+   "ms/step": 7.349212653934956,
    "peak MiB": 1036.52587890625
   },
   {
    "model": "pruned m=1",
    "batch": 1,
-   "tokens/s": 170.25322837462306,
-   "ms/step": 5.873603746294975,
+   "tokens/s": 170.65456899996218,
+   "ms/step": 5.8597903698682785,
    "peak MiB": 746.978515625
   },
   {
    "model": "pruned m=1",
    "batch": 8,
-   "tokens/s": 1104.1887238720478,
-   "ms/step": 7.2451382875442505,
+   "tokens/s": 1106.0841390060903,
+   "ms/step": 7.2327228263020515,
    "peak MiB": 762.36865234375
   }
  ],
+ "B2": {
+  "distinct": 5562,
+  "vocab": 262144,
+  "fertility": 1.3086109966005293,
+  "variants": [
+   {
+    "variant": "starter rule: every merge-less entry + all added",
+    "vocab": 37562,
+    "merges": 33051,
+    "added": 6415,
+    "round trip": true,
+    "train identical": 1.0,
+    "held identical": 0.45604395604395603,
+    "held length ratio": 1.0117590034019217
+   },
+   {
+    "variant": "256 byte tokens + all added",
+    "vocab": 18404,
+    "merges": 33051,
+    "added": 6415,
+    "round trip": true,
+    "train identical": 1.0,
+    "held identical": 0.45604395604395603,
+    "held length ratio": 1.0117590034019217
+   },
+   {
+    "variant": "256 byte tokens, no <unused> (shipped)",
+    "vocab": 12162,
+    "merges": 33051,
+    "added": 173,
+    "round trip": true,
+    "train identical": 1.0,
+    "held identical": 0.45604395604395603,
+    "held length ratio": 1.0117590034019217
+   },
+   {
+    "variant": "same, closure via first producer only",
+    "vocab": 9727,
+    "merges": 23089,
+    "added": 173,
+    "round trip": true,
+    "train identical": 0.2561158262606091,
+    "held identical": 0.13736263736263737,
+    "held length ratio": 1.0220165411960094
+   }
+  ],
+  "params": [
+   268098176,
+   108149376
+  ],
+  "ckpt_mb": [
+   536.22468,
+   218.200833
+  ],
+  "bpb": [
+   {
+    "bits_per_byte": 1.5284991523871132,
+    "nll_per_token": 4.003852265382137,
+    "tokens": 209788,
+    "bytes": 792808,
+    "tokens_per_byte": 0.2646138787701436
+   },
+   {
+    "bits_per_byte": 1.4919395433331133,
+    "nll_per_token": 3.8767079661892514,
+    "tokens": 211486,
+    "bytes": 792808,
+    "tokens_per_byte": 0.2667556331419461
+   },
+   {
+    "bits_per_byte": 1.4919395433331133,
+    "nll_per_token": 3.8767079661892514,
+    "tokens": 211486,
+    "bytes": 792808,
+    "tokens_per_byte": 0.2667556331419461
+   }
+  ],
+  "bpb_en": [
+   {
+    "bits_per_byte": 1.166111962764721,
+    "nll_per_token": 3.5022150009910678,
+    "tokens": 53448,
+    "bytes": 231584,
+    "tokens_per_byte": 0.23079314633135278
+   },
+   {
+    "bits_per_byte": 2.773456198040351,
+    "nll_per_token": 5.653191942744312,
+    "tokens": 78752,
+    "bytes": 231584,
+    "tokens_per_byte": 0.34005803509741606
+   }
+  ],
+  "sweep": [
+   {
+    "m": 1,
+    "vocab": 12162,
+    "params (M)": 108.149376,
+    "length ratio": 1.0117590034019217,
+    "bits/byte": 1.4919395433331133
+   },
+   {
+    "m": 5,
+    "vocab": 10524,
+    "params (M)": 107.084416,
+    "length ratio": 1.0128615349097199,
+    "bits/byte": 1.4924958896756255
+   },
+   {
+    "m": 20,
+    "vocab": 7663,
+    "params (M)": 105.241216,
+    "length ratio": 1.0185250576085545,
+    "bits/byte": 1.497635383096282
+   },
+   {
+    "m": 100,
+    "vocab": 5235,
+    "params (M)": 103.684736,
+    "length ratio": 1.0333663080104805,
+    "bits/byte": 1.5384276783029731
+   },
+   {
+    "m": 500,
+    "vocab": 3047,
+    "params (M)": 102.292096,
+    "length ratio": 1.1177500822904922,
+    "bits/byte": 1.8109531721713288
+   }
+  ],
+  "gen": [
+   [
+    "mammoth be big animal with long hair. people are very fond of it.<start_of_image>The first thing that comes to mind is the big wolf.<start_of_image>The wolf is a big animal with long hair.",
+    "long ago, people of Rome make a habit of going to the temple of the Virgin Mary.\n\nThe Virgin Mary is the patron saint of the Catholic Church.\n\nThe Virgin Mary is"
+   ],
+   [
+    "mammoth be big animal with long hair. people who live in the forest have a big house.<start_of_image>The house is big and the house is big.<start_of_image>The house is big and the house is",
+    "long ago, people of Rome make a point of not only writing down the history of the Roman Empire, but also of writing down the history of the people of Rome.\n\nThe Roman"
+   ]
+  ]
+ },
  "times": {
   "corpus": 0.3,
   "part1": 2.2,
@@ -330,7 +471,8 @@
   "ship": 0.4,
   "B3": 5.1,
   "B1": 39.6,
-  "B4": 8.4
+  "B4": 8.3,
+  "B2": 32.7
  },
  "env": {
   "device": "NVIDIA GeForce RTX 4090",

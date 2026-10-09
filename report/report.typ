@@ -32,9 +32,8 @@ articles (1163 KB) are used only as an _out-of-language probe_ (first 4,000 char
 
 *Setup.* `Qwen/Qwen2.5-0.5B` (byte-level BPE, 151,643 + 22 added tokens, tied embeddings), seed 0, one NVIDIA GeForce RTX 4090,
 bfloat16 weights with float32 cross-entropy, torch 2.14.1+cu130, transformers 5.19.0,
-tokenizers 0.23.2. The whole notebook runs in 1.6 min on this GPU (on a T4 it switches to fp16,
-which gives the same bits per byte to 4 decimals). Bits per byte follows §5 of the assignment exactly (`<|endoftext|>`
-prefix, non-overlapping windows of 512 tokens); my batched implementation is checked against the starter's function in the notebook.
+tokenizers 0.23.2. The whole notebook runs in 2.2 min on this GPU (on a T4 it switches to fp16,
+which gives the same bits per byte to 4 decimals). Bits per byte follows §5 exactly (batched, checked against the starter's function).
 
 = Token usage (Part 1)
 #figure(table(columns: 7, align: (left, right, right, right, right, right, right),
@@ -50,7 +49,7 @@ Qwen2.5 needs only 4,973 of its 151,643 ids (3.28%) for the whole train corpus, 
 2,018 ids for the caveman text and 21,867 for the English originals of the *same* articles.
 All four tokenizers are practically equivalent here (fertility 1.23–1.29): every list word is one
 token with its leading space, the rest are punctuation, digits and pieces of rare names. Qwen is slightly worse only because
-its pre-tokenizer splits numbers into single digits and caveman text is full of years ("year 1453"): with the numbers removed Qwen and cl100k both give 1.172. A bigger vocabulary buys nothing for this language.
+its pre-tokenizer splits numbers into single digits and caveman text is full of years ("year 1453"): with the numbers removed Qwen and cl100k both give 1.172.
 
 #figure(image("../figures/coverage.png", width: 80%), caption: [Coverage of token occurrences by the $k$ most frequent ids.
 Left: train corpus, four tokenizers. Right: Qwen2.5 on the held-out articles, caveman vs their English originals.]) <cov>
@@ -112,26 +111,28 @@ needs 1.50× more tokens and bits per byte rises from 0.970 to 2.102.
 ), caption: [Threshold sweep and random control on the held-out caveman text and the English probe (EN).]) <t3>
 
 *Random control.* Keeping the same number of tokens at random (with closure) instead of the frequent ones makes the caveman
-text 1.72× longer and bits per byte jumps to 2.645 (vs 1.2279). The gain is
-therefore not "fewer tokens are fine": it comes from the extremely skewed usage distribution, which the frequency threshold
-follows.
+text 1.72× longer and bits per byte jumps to 2.645 (vs 1.2279). The gain comes from the extremely skewed usage
+distribution, which the frequency threshold follows — not from "fewer tokens are fine".
 
-*Knee and what to ship.* Bits per byte stays below the original up to $m = 100$ (vocabulary ≈ 2k: roughly the 961 words in
-their 1–2 spellings plus punctuation and digits) and breaks at $m = 500$, where list words start to split. In *parameters*, however,
+*Knee and what to ship.* Bits per byte stays below the original up to $m = 100$ (≈2k tokens: the 961 words in 1–2 spellings,
+punctuation, digits) and breaks at $m = 500$, where list words start to split. In *parameters*, however,
 the knee is at $m = 1$ already: the embedding share falls from 27.6% to 1.6%, and every further step saves at most 1.3% of the
 model while the held-out agreement drops from 40.7% to 6.6% ($m = 20$). I would ship *$m = 1$*: −26.4%
 parameters, the best bits per byte, exactly the original tokenization on everything seen in training, and the most
 robust handling of unseen names.
 
 = Bonuses
-*B3 — tokenizer trained from scratch.* A byte-level BPE trained on the caveman corpus with Qwen's pre-tokenizer and the same vocabulary size
-gives almost the same tokens/byte, but plugged into Qwen with random embeddings the model is useless:
-4.719 bits/byte — worse than a uniform distribution — and generation degenerates into repeating one token.
-Initialising each new token as the mean of the Qwen embeddings of its pieces (FVT) restores 1.232 bits/byte without any training.
-*B1 — vocabulary extension.* New merges trained with `tokenizers` on the caveman corpus, appended after the pruned vocabulary
-(ranked by how often their inputs are adjacent), mean-initialised: fertility 1.2889 → 1.2841
-with 500 new tokens — little room is left, since every list word is already one token and only rare names split.
-An embedding-only fine-tune (100 steps) lowers bits per byte to ≈1.198 for the pruned and the extended model alike.
+*B2 — Gemma-3-270M (SentencePiece-style BPE with byte fallback).* Gemma's embedding is 63% of its weights. Its tokenizer has no
+byte-level alphabet: 25,805 entries are produced by no merge (single characters of all scripts) and 278k merges duplicate another
+merge's result. With byte fallback only the 256 `<0xNN>` tokens are needed as base alphabet, the closure must follow *all* merges
+that build a kept token (following only the first one leaves 25.6% of the train articles identical), and the
+6,242 `<unusedN>` placeholders can go: 37,562 → *12,162* tokens, all checks pass. Parameters
+268 → *108 M (−59.7%)*, bits/byte 1.5285 → 1.4919 (English probe 1.166 → 2.773); appendix.
+*B3 — tokenizer trained from scratch.* A BPE trained on the caveman corpus (Qwen's pre-tokenizer, same vocabulary size) tokenizes as well, but
+with random embeddings Qwen gets 4.719 bits/byte — worse than uniform — and repeats one token; mean-of-pieces (FVT) init gives 1.232.
+*B1 — vocabulary extension.* New merges trained with `tokenizers`, appended to the pruned vocabulary, mean-initialised: fertility
+1.2889 → 1.2841 with 500 tokens (every list word is already one token; only rare names split). A 100-step
+embedding-only fine-tune gives ≈1.193 bits/byte with or without the extension.
 *B4 — serving.* Peak memory 1002 → 747 MiB at batch 1; decode throughput changes by only
 +2% (batch 1): GPU decoding of a 0.5B model is dominated by the 24 layers and kernel launches, not by the head.
 
@@ -139,27 +140,48 @@ An embedding-only fine-tune (100 steps) lowers bits per byte to ≈1.198 for the
 The corpus is LLM-generated: its style is Haiku's, it is shorter than the source (caveman/English ≈ 0.68) and some
 paragraphs are condensed; held-out text comes from the same generator, so it is in-distribution by construction. Caveman English
 is a register of English, not a natural language, and its closed vocabulary makes pruning much cleaner than for a real language.
-Re-generating the corpus would not reproduce it byte for byte (hence the frozen files). One model, one seed, one corpus. The original model does not "speak" caveman (it continues prompts in normal English);
+Re-generating the corpus would not reproduce it byte for byte (hence the frozen files). One seed, one corpus. The original model does not "speak" caveman (it continues prompts in normal English);
 pruning restricts the vocabulary but not the grammar.
-
-*AI assistance.* The notebook, the corpus pipeline and this report were written with an AI coding assistant (Claude Code with
-Claude Opus 5.5) under my direction; the corpus itself was generated by `claude-haiku-5-5` (≈47 M output tokens).
+*AI assistance:* notebook, pipeline and report were written with Claude Code (Claude Opus 5.5) under my direction; the corpus by `claude-haiku-5-5`.
 
 #pagebreak()
 = Appendix
 #figure(table(columns: 5, align: (right,) * 5,
 [new tokens], [fertility (train)], [tokens/byte (held)], [bits/byte (held)], [after embedding fine-tune],
-[0], [1.2889], [0.2628], [1.2279], [1.1979],
-[100], [1.2865], [0.2628], [1.2287], [1.1970],
-[500], [1.2841], [0.2627], [1.2299], [1.1831],
-), caption: [B1 — vocabulary extension on top of the $m = 1$ tokenizer. First new tokens: ␣Gowa, atchez, ruze, inteler, ␣Cus, ␣Neculu, ␣Wint, ␣Assam.])
+[0], [1.2889], [0.2628], [1.2279], [1.1929],
+[100], [1.2865], [0.2628], [1.2287], [1.1945],
+[500], [1.2841], [0.2627], [1.2299], [1.1837],
+), caption: [B1 — vocabulary extension on top of the $m = 1$ tokenizer. First new tokens: ␣Gowa, atchez, inteler, ruze, ␣Cus, ␣Neculu, ␣Wint, ␣Assam.])
+
+#figure(table(columns: 8, align: (left,) + (right,) * 7,
+[Gemma-3-270M pruning rule], [vocab], [merges], [added], [round trip], [train identical], [held identical], [held length ratio],
+[starter rule: every merge-less entry + all added], [37,562], [33,051], [6,415], [yes], [100.0%], [45.6%], [1.0118],
+[256 byte tokens + all added], [18,404], [33,051], [6,415], [yes], [100.0%], [45.6%], [1.0118],
+[256 byte tokens, no `<unused>` (shipped)], [12,162], [33,051], [173], [yes], [100.0%], [45.6%], [1.0118],
+[same, closure via first producer only], [9,727], [23,089], [173], [yes], [25.6%], [13.7%], [1.0220],
+), caption: [B2 — pruning variants for Gemma's byte-fallback tokenizer ($m = 1$). The shipped variant keeps 7 special + 166 whitespace added tokens.])
+
+#grid(columns: (1fr, 1fr), gutter: 8pt,
+figure(table(columns: 5, align: (right,) * 5, [m], [vocab], [params, M], [length ratio], [bits/byte],
+[1], [12,162], [108.1], [1.0118], [1.4919],
+[5], [10,524], [107.1], [1.0129], [1.4925],
+[20], [7,663], [105.2], [1.0185], [1.4976],
+[100], [5,235], [103.7], [1.0334], [1.5384],
+[500], [3,047], [102.3], [1.1178], [1.8110],
+), caption: [B2 — Gemma threshold sweep (original: 1.5285 bits/byte, 268.1 M params).]),
+figure(table(columns: 3, align: (left, right, right), [], [original], [pruned $m = 1$],
+[params], [268.1 M], [108.1 M],
+[bf16 checkpoint], [536 MB], [218 MB],
+[bits/byte caveman], [1.5285], [1.4919 (reloaded 1.4919)],
+[bits/byte English], [1.166], [2.773],
+), caption: [B2 — Gemma-3-270M before and after pruning.]))
 
 #figure(table(columns: 5, align: (left, right, right, right, right),
 [model], [batch], [tokens/s], [ms/step], [peak MiB],
-[original], [1], [166], [6.01], [1002],
-[original], [8], [1059], [7.55], [1037],
-[pruned m=1], [1], [170], [5.87], [747],
-[pruned m=1], [8], [1104], [7.25], [762],
+[original], [1], [168], [5.96], [1002],
+[original], [8], [1089], [7.35], [1037],
+[pruned m=1], [1], [171], [5.86], [747],
+[pruned m=1], [8], [1106], [7.23], [762],
 ), caption: [B4 — greedy decoding of 128 new tokens, NVIDIA GeForce RTX 4090, bfloat16.])
 
 *Corpus generation.* 3,482 chunks of ≤ 6,000 characters; 98.3% accepted after at most one repair turn (6 chunks never produced an answer and are missing); ≈90% of
@@ -168,4 +190,4 @@ With thinking disabled 15–30% of the words broke the rules and repair turns di
 The full pipeline (`corpus_pipeline/`) and the style guide given to the model are in the repository.
 
 *Reproduce.* Open `hw1_mikhalchuk.ipynb` in Colab (GPU) or any machine with a GPU and run all cells; it downloads the
-frozen corpus from the repository and Qwen from the Hub. Runtime per part (s, NVIDIA GeForce RTX 4090): corpus 0, part1 2, part2 3, part3 12, part4 27, ship 0, B3 5, B1 40, B4 8.
+frozen corpus from the repository and Qwen from the Hub. Runtime per part (s, NVIDIA GeForce RTX 4090): corpus 0, part1 2, part2 3, part3 12, part4 27, ship 0, B3 5, B1 40, B4 8, B2 33.

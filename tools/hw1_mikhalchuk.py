@@ -257,14 +257,14 @@ def tokenization_agreement(tok_a: Tokenizer, tok_b: Tokenizer, texts):
 # %%
 @torch.no_grad()
 def bpb(model, tok, texts, prefix_id, max_len=512, device=DEVICE, logit_budget=2.5e8):
-    """Exactly the starter's `bits_per_byte` (same <|endoftext|> prefix, same non-overlapping windows of <= 512 tokens),
+    """Exactly the starter's `bits_per_byte` (same prefix token, same non-overlapping windows of <= 512 tokens),
     but the windows of all texts are scored in batches with right padding. The batch size is chosen so that the
     float32 logits stay below `logit_budget` elements (the full 151k-vocab head needs small batches)."""
     model.eval().to(device)
     V = model.get_output_embeddings().weight.shape[0]
     bs = int(max(1, min(64, logit_budget // (max_len * V))))
     windows, n_tok, n_bytes = [], 0, 0
-    for text, enc in zip(texts, tok.encode_batch(list(texts))):
+    for text, enc in zip(texts, tok.encode_batch(list(texts), add_special_tokens=False)):
         ids = [prefix_id] + enc.ids
         n_tok += len(enc.ids); n_bytes += len(text.encode("utf-8"))
         for s in range(0, len(ids) - 1, max_len - 1):
@@ -898,6 +898,208 @@ if BONUS:
 # The pruned model needs ~25% less GPU memory (the 151,936 × 896 embedding is 27% of the weights). Decode throughput
 # barely changes on a GPU: generating with a 0.5B model is dominated by 24 transformer layers and kernel-launch overhead,
 # not by the output head. On a CPU or a phone, where the head's matrix-vector product is a real share of the time, the gain is larger.
+
+# %% [markdown]
+# ## Bonus B2 — Gemma-3-270M: a SentencePiece-style BPE with `byte_fallback`
+# `google/gemma-3-270m` has a 262,144-token vocabulary on a 268 M-parameter model: the embedding is 63% of all weights.
+# Its tokenizer is not byte-level: spaces become `▁`, there is no pre-tokenizer, and a character that is not in the
+# vocabulary falls back to its UTF-8 bytes `<0x00>`…`<0xFF>`. Three things change in the pruning:
+#
+# 1. **Base alphabet.** "Every entry no merge produces" is 25,805 tokens here — single characters of all scripts. With
+#    byte fallback only the 256 byte tokens are needed for any text to round-trip; unused characters can go.
+# 2. **Duplicate merge results.** 278k of the 515k merges build a token that another merge also builds (an artefact of the
+#    SentencePiece → BPE conversion), so "the merge that produces t" is not unique. The closure must follow **all** of
+#    them; following only the highest-priority one breaks check (2), shown below.
+# 3. **Added tokens.** 6,415 added tokens, of which 6,242 are `<unusedN>` placeholders that no text can contain. The
+#    assignment says to keep added / special tokens; I keep the 7 real specials and 166 whitespace tokens and drop the
+#    placeholders (both variants are reported).
+#
+# The model side needs care too: Gemma multiplies the embedding by √640 inside its own embedding module, so the rows are
+# sliced *in place* instead of swapping in a plain `nn.Embedding` (which the starter's helper would do, silently dropping
+# the scale). The tokenizer adds `<bos>` by itself, so usage counts and bits per byte use `add_special_tokens=False`
+# with `<bos>` as the explicit prefix. The model is gated: accept the licence on its Hub page and log in, otherwise this
+# section is skipped.
+
+# %%
+
+def prune_byte_fallback(tok_json, keep_ids, closure="all", keep_unused=False, keep_chars=False, verbose=True):
+    """Pruning for a SentencePiece-style BPE with byte_fallback (Gemma 3).
+    Differences from the byte-level case:
+      * base alphabet = the 256 <0xNN> byte tokens (any character missing from the vocabulary falls back to its UTF-8
+        bytes), not every merge-less entry (Gemma has 25.8k of them: single characters of all scripts);
+        keep_chars=True keeps all of them instead (the starter's rule);
+      * merges have duplicate results (the same token can be built by several merges): closure="all" keeps the inputs
+        of every merge that produces a kept token, closure="first" only those of the highest-priority one;
+      * added tokens: all of them, or (keep_unused=False) all except the 6,242 `<unusedN>` placeholders."""
+    model = tok_json["model"]; vocab = model["vocab"]; id2tok = {i: t for t, i in vocab.items()}
+    pairs = [tuple(m) if not isinstance(m, str) else tuple(m.split(" ", 1)) for m in model["merges"]]
+    producers = collections.defaultdict(list)
+    for a, b in pairs:
+        producers[a + b].append((a, b))
+    added = [a for a in tok_json["added_tokens"] if keep_unused or not a["content"].startswith("<unused")]
+    keep = {id2tok[i] for i in keep_ids if i in id2tok}
+    keep |= {a["content"] for a in added if a["content"] in vocab}
+    keep |= {t for t in vocab if re.fullmatch(r"<0x[0-9A-F]{2}>", t)}
+    if model.get("unk_token"):
+        keep.add(model["unk_token"])
+    if keep_chars:
+        keep |= {t for t in vocab if t not in producers}
+    stack = list(keep)
+    while stack:
+        t = stack.pop()
+        for a, b in (producers.get(t, []) if closure == "all" else producers.get(t, [])[:1]):
+            for part in (a, b):
+                if part not in keep:
+                    keep.add(part); stack.append(part)
+    old = sorted(vocab[t] for t in keep)
+    old2new = {o: n for n, o in enumerate(old)}
+    nv = {id2tok[o]: n for o, n in old2new.items()}
+    str_fmt = isinstance(model["merges"][0], str)
+    nm = [f"{a} {b}" if str_fmt else [a, b] for a, b in pairs if a in nv and b in nv and a + b in nv]
+    nj = json.loads(json.dumps(tok_json))
+    nj["model"]["vocab"], nj["model"]["merges"] = nv, nm
+    nxt, na = len(nv), []
+    for at in sorted(added, key=lambda a: a["id"]):
+        at = dict(at)
+        if at["content"] in nv:
+            old2new[at["id"]] = at["id"] = nv[at["content"]]
+        else:
+            old2new[at["id"]] = at["id"] = nxt; nxt += 1
+        na.append(at)
+    nj["added_tokens"] = na
+    def remap(pp):
+        if isinstance(pp, dict):
+            for st in (pp.get("special_tokens") or {}).values() if isinstance(pp.get("special_tokens"), dict) else []:
+                if "ids" in st:
+                    st["ids"] = [old2new[i] for i in st["ids"]]
+            for v in pp.values(): remap(v)
+        elif isinstance(pp, list):
+            for v in pp: remap(v)
+    remap(nj.get("post_processor"))
+    if verbose:
+        print(f"vocab {len(vocab):,} -> {len(nv):,}; merges {len(pairs):,} -> {len(nm):,}; added {len(tok_json['added_tokens']):,} -> {len(na):,}; total ids {nxt:,}")
+    return nj, old2new
+
+
+def prune_embeddings_inplace(model, old2new, pad_to_multiple_of=64):
+    """Slice the rows of the existing (tied) embedding module, keeping the module itself (Gemma scales its output).
+    Token ids the original matrix has no row for (Gemma's tokenizer has `<image_soft_token>` = 262,144 for the
+    multimodal models; the text-only 270M model has 262,144 rows) get a zero row — they were unusable before as well."""
+    n = max(old2new.values()) + 1
+    padded = int(math.ceil(n / pad_to_multiple_of) * pad_to_multiple_of)
+    emb = model.get_input_embeddings()
+    old_rows = emb.weight.shape[0]
+    index = torch.tensor([o for o, _ in sorted(old2new.items(), key=lambda kv: kv[1])])
+    valid = index < old_rows
+    w = emb.weight.data.new_zeros(padded, emb.weight.shape[1])
+    w[:n][valid.to(w.device)] = emb.weight.data[index[valid].to(w.device)]
+    emb.weight = torch.nn.Parameter(w); emb.num_embeddings = padded
+    if emb.padding_idx is not None:
+        emb.padding_idx = old2new.get(emb.padding_idx)
+    head = model.get_output_embeddings()
+    head.weight = emb.weight; head.out_features = padded
+    model.config.vocab_size = padded
+    return model
+
+GEMMA = "google/gemma-3-270m"
+GDTYPE = torch.bfloat16 if DEVICE == "cuda" and torch.cuda.get_device_capability()[0] >= 8 else torch.float32  # Gemma overflows in fp16
+gpath = None
+if BONUS:
+    for local_only in (False, True):
+        try:
+            gpath = snapshot_download(GEMMA, allow_patterns=["*.json", "*.safetensors"], local_files_only=local_only); break
+        except Exception as e:
+            err = e
+    if gpath is None:
+        print(f"B2 skipped: {GEMMA} is gated — accept its licence on the Hub and log in ({type(err).__name__})")
+
+if gpath:
+    g_json = load_tokenizer_json(os.path.join(gpath, "tokenizer.json"))
+    g_tok = tokenizer_from_json(g_json)
+    gV = len(g_json["model"]["vocab"])
+    g_counts = collections.Counter(i for e in g_tok.encode_batch(train_docs, add_special_tokens=False) for i in e.ids)
+    g_nt = sum(g_counts.values())
+    print(f"Gemma-3 vocab {gV:,} | train tokens {g_nt:,} | bytes/token {n_bytes / g_nt:.2f} | fertility {g_nt / n_words:.3f} | "
+          f"distinct ids {len(g_counts):,} ({len(g_counts) / gV:.2%})")
+    g_bos = g_tok.token_to_id("<bos>")
+    gm = AutoModelForCausalLM.from_pretrained(gpath, dtype=GDTYPE).to(DEVICE)
+    gp0 = n_params(gm)
+    g_r0, g_r0_en = bpb(gm, g_tok, held_docs, g_bos), bpb(gm, g_tok, en_probe, g_bos)
+    g_fast0 = PreTrainedTokenizerFast(tokenizer_object=g_tok, bos_token="<bos>", eos_token="<eos>", pad_token="<pad>", unk_token="<unk>")
+    g_gen0 = generate(gm, g_fast0, PROMPTS[:2])
+    gm.to(torch.bfloat16).save_pretrained("gemma_original"); gm.to(GDTYPE); g_size0 = dir_mb("gemma_original")
+    del gm; torch.cuda.empty_cache()
+
+    variants = [("starter rule: every merge-less entry + all added", dict(keep_chars=True, keep_unused=True)),
+                ("256 byte tokens + all added", dict(keep_unused=True)),
+                ("256 byte tokens, no <unused> (shipped)", dict()),
+                ("same, closure via first producer only", dict(closure="first"))]
+    g_rows = []
+    for label, kw in variants:
+        nj, o2n = prune_byte_fallback(g_json, list(g_counts), verbose=False, **kw)
+        nt = tokenizer_from_json(nj)
+        rt = all(nt.decode(nt.encode(d).ids) == d for d in held_docs) and all(nt.decode(nt.encode(d).ids) == d for d in held_en)
+        g_rows.append({"variant": label, "vocab": len(nj["model"]["vocab"]), "merges": len(nj["model"]["merges"]),
+                       "added": len(nj["added_tokens"]), "round trip": rt,
+                       "train identical": agreement(g_tok, nt, train_docs)["identical_fraction"],
+                       "held identical": agreement(g_tok, nt, held_docs)["identical_fraction"],
+                       "held length ratio": agreement(g_tok, nt, held_docs)["length_ratio"]})
+        if label.endswith("(shipped)"):
+            g_json1, g_o2n1, g_tok1 = nj, o2n, nt
+    tg = pd.DataFrame(g_rows).set_index("variant")
+    display(tg.style.format({"vocab": "{:,}", "merges": "{:,}", "added": "{:,}", "train identical": "{:.1%}",
+                             "held identical": "{:.1%}", "held length ratio": "{:.4f}"}))
+
+    gm = AutoModelForCausalLM.from_pretrained(gpath, dtype=GDTYPE).to(DEVICE)
+    prune_embeddings_inplace(gm, g_o2n1); remap_special_ids(gm, g_o2n1)
+    gp1 = n_params(gm)
+    g_bos1 = g_o2n1[g_bos]
+    g_r1, g_r1_en = bpb(gm, g_tok1, held_docs, g_bos1), bpb(gm, g_tok1, en_probe, g_bos1)
+    g_fast1 = PreTrainedTokenizerFast(tokenizer_object=g_tok1, bos_token="<bos>", eos_token="<eos>", pad_token="<pad>", unk_token="<unk>")
+    g_gen1 = generate(gm, g_fast1, PROMPTS[:2])
+    g_dir = "gemma-3-270m-caveman-m1"
+    gm.to(torch.bfloat16).save_pretrained(g_dir); g_fast1.save_pretrained(g_dir); g_size1 = dir_mb(g_dir)
+    del gm; torch.cuda.empty_cache()
+    gm = AutoModelForCausalLM.from_pretrained(g_dir, dtype=GDTYPE).to(DEVICE)
+    g_fr = PreTrainedTokenizerFast.from_pretrained(g_dir)
+    g_r1r = bpb(gm, g_fr.backend_tokenizer, held_docs, g_fr.convert_tokens_to_ids("<bos>"))
+    assert abs(g_r1r["bits_per_byte"] - g_r1["bits_per_byte"]) < 1e-3
+    del gm; torch.cuda.empty_cache()
+
+    g_sweep = []
+    for m_ in [1, 5, 20, 100, 500]:
+        nj, o2n = prune_byte_fallback(g_json, [i for i, c in g_counts.items() if c >= m_], verbose=False)
+        nt = tokenizer_from_json(nj)
+        gm = AutoModelForCausalLM.from_pretrained(gpath, dtype=GDTYPE).to(DEVICE); prune_embeddings_inplace(gm, o2n)
+        r = bpb(gm, nt, held_docs, o2n[g_bos])
+        g_sweep.append({"m": m_, "vocab": len(nj["model"]["vocab"]), "params (M)": n_params(gm) / 1e6,
+                        "length ratio": agreement(g_tok, nt, held_docs)["length_ratio"], "bits/byte": r["bits_per_byte"]})
+        del gm; torch.cuda.empty_cache()
+    tgs = pd.DataFrame(g_sweep).set_index("m")
+
+    tg3 = pd.DataFrame([
+        {"": "Gemma-3-270M original", "vocab rows": 262_144, "params (M)": gp0 / 1e6, "bf16 checkpoint (MB)": g_size0,
+         "bits/byte caveman": g_r0["bits_per_byte"], "bits/byte English probe": g_r0_en["bits_per_byte"]},
+        {"": "pruned (shipped variant, m=1)", "vocab rows": max(g_o2n1.values()) + 1, "params (M)": gp1 / 1e6, "bf16 checkpoint (MB)": g_size1,
+         "bits/byte caveman": g_r1["bits_per_byte"], "bits/byte English probe": g_r1_en["bits_per_byte"]},
+        {"": "pruned, reloaded", "vocab rows": max(g_o2n1.values()) + 1, "params (M)": gp1 / 1e6, "bf16 checkpoint (MB)": g_size1,
+         "bits/byte caveman": g_r1r["bits_per_byte"]}]).set_index("")
+    display(tg3.style.format("{:,.4f}", subset=["bits/byte caveman", "bits/byte English probe"]).format("{:,.1f}", subset=["params (M)", "bf16 checkpoint (MB)"]))
+    display(tgs.style.format({"vocab": "{:,}", "params (M)": "{:.1f}", "length ratio": "{:.4f}", "bits/byte": "{:.4f}"}))
+    print(f"Gemma parameters -{1 - gp1 / gp0:.1%}, checkpoint -{1 - g_size1 / g_size0:.1%} (Qwen: -{1 - p1 / p0:.1%})")
+    for a_, b_ in zip(g_gen0, g_gen1):
+        print(f"\noriginal: {a_!r}\npruned  : {b_!r}")
+    RESULTS["B2"] = {"distinct": len(g_counts), "vocab": gV, "fertility": g_nt / n_words, "variants": g_rows,
+                     "params": [gp0, gp1], "ckpt_mb": [g_size0, g_size1], "bpb": [g_r0, g_r1, g_r1r], "bpb_en": [g_r0_en, g_r1_en],
+                     "sweep": g_sweep, "gen": [g_gen0, g_gen1]}
+    lap("B2")
+
+# %% [markdown]
+# With byte fallback the pruned Gemma keeps **all** the guarantees of Part 2 (any text round-trips, the train corpus is
+# tokenized identically, held-out text almost so) while dropping ~95% of the vocabulary. Because the embedding is 63% of
+# Gemma's weights, the same procedure that saved 26% on Qwen cuts Gemma by more than half. The starter's "every merge-less
+# entry" rule would keep 3× more tokens for nothing; the `<unused>` placeholders alone would cost 6k rows; and following
+# only the first producer of each token is not a valid closure for this tokenizer (check (2) fails).
 
 # %% [markdown]
 # ## Summary and reproducibility
